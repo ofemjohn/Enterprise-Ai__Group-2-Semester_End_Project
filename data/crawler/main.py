@@ -88,7 +88,9 @@ class WebCrawler:
                 return []
         
         self.visited.add(normalized_url)
-        print(f"[Depth {depth}/{max_depth_for_branch}] Crawling: {normalized_url}")
+        total_visited = len(self.visited)
+        queue_size = len(self.queue)
+        print(f"\n[{total_visited}] [Depth {depth}/{max_depth_for_branch}] Crawling: {normalized_url}", flush=True)
         
         page = None
         try:
@@ -118,9 +120,9 @@ class WebCrawler:
                     "text": downloaded.strip()
                 })
                 self.stats["success"] += 1
-                print(f"  ✓ Extracted {len(downloaded)} characters")
+                print(f"  ✓ Extracted {len(downloaded):,} characters", flush=True)
             else:
-                print(f"  ⚠ No text content extracted")
+                print(f"  ⚠ No text content extracted", flush=True)
             
             # Parse HTML and get all internal links
             soup = BeautifulSoup(html, "html.parser")
@@ -146,12 +148,12 @@ class WebCrawler:
                     seen_links.add(link)
                     unique_links.append(link)
             
-            print(f"  → Found {len(unique_links)} new links to crawl")
+            print(f"  → Found {len(unique_links)} new links to crawl (Queue: {len(self.queue)})", flush=True)
             return unique_links
             
         except Exception as e:
             self.stats["errors"] += 1
-            print(f"  ✗ Error on {normalized_url}: {e}")
+            print(f"  ✗ Error on {normalized_url}: {e}", flush=True)
             return []
         
         finally:
@@ -181,8 +183,10 @@ class WebCrawler:
                     self.queue.append((normalized_start, 0))
                     self.url_domains[normalized_start] = allowed_domains
                     self.url_max_depth[normalized_start] = max_depth
-                    print(f"Added entry point: {normalized_start} (domains: {allowed_domains}, max_depth: {max_depth})")
-                print()
+                    print(f"  [{len(self.queue)}] Entry point: {normalized_start[:60]}... (depth: {max_depth})", flush=True)
+                print(f"\n{'='*70}")
+                print(f"Starting crawl with {len(self.queue)} URLs in queue...")
+                print(f"{'='*70}\n", flush=True)
                 
                 # Process queue
                 while self.queue:
