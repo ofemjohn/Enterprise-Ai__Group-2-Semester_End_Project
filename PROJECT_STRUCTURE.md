@@ -1,20 +1,6 @@
-# KSU IT Department RAG Chatbot
+# KSU IT Department RAG Chatbot - Project Structure
 
-KSU IT RAG Chatbot is a full-stack Retrieval-Augmented Generation system for Kennesaw State University's IT Department. It crawls curated KSU resources, embeds them with Hugging Face, and answers questions with citations via FastAPI, React, and a cloud vector database.
-
-## 🎯 Project Purpose
-
-This chatbot helps students in the KSU IT Department (College of Computing and Software Engineering) find answers to questions about IT services, programs, and resources by searching through official department documentation. Each answer includes source links for accountability and trust.
-
-## 🛠️ Tech Stack
-
-- **Backend**: FastAPI (Python)
-- **Frontend**: React
-- **ML/AI**: Hugging Face Transformers
-- **Vector Database**: Pinecone (Cloud-based)
-- **Web Scraping**: Playwright + Trafilatura
-
-## 📁 Project Structure
+## Recommended Project Structure
 
 ```
 ksu-it-rag-chatbot/
@@ -112,7 +98,7 @@ ksu-it-rag-chatbot/
         └── ci.yml
 ```
 
-## 🔑 Key Features
+## Key Features of This Structure
 
 1. **Separation of Concerns**: Clear separation between backend, frontend, and data
 2. **Modular Design**: Each service/component is in its own file
@@ -120,15 +106,3 @@ ksu-it-rag-chatbot/
 4. **Scalable**: Easy to add new features
 5. **Documentation**: Comprehensive docs for setup and usage
 
-## 🚀 Getting Started
-
-See `PROJECT_STRUCTURE.md` for detailed project structure and setup instructions.
-
-## 📝 Current Files
-
-- `main.py` - Web crawler script for scraping KSU IT department websites
-- `PROJECT_STRUCTURE.md` - Detailed project structure guide
-
-## 👥 Team
-
-Enterprise AI - Group 2 - Semester End Project
