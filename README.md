@@ -18,98 +18,31 @@ This chatbot helps students in the KSU IT Department (College of Computing and S
 
 ```
 ksu-it-rag-chatbot/
-├── README.md                          # Main project documentation
-├── .gitignore                         # Git ignore file
-├── .env.example                       # Environment variables template
+├── main.py                          # FastAPI application entry point
+├── run_crawler.py                   # Web crawler runner script
+├── requirements.txt                 # Python dependencies
+├── README.md                        # This file
 │
-├── backend/                           # FastAPI Backend
-│   ├── app/
+├── backend/                         # FastAPI Backend
+│   └── app/
+│       ├── __init__.py
+│       ├── main.py                  # FastAPI application setup
+│       ├── api/                     # API routes
+│       │   └── routes/
+│       ├── services/                # Business logic
+│       ├── models/                  # Data models
+│       └── utils/                   # Utilities
+│
+├── data/                            # Data processing and storage
+│   ├── crawler/                     # Web scraping scripts
 │   │   ├── __init__.py
-│   │   ├── main.py                    # FastAPI application entry point
-│   │   ├── config.py                  # Configuration settings
-│   │   ├── models/                    # Data models
-│   │   │   ├── __init__.py
-│   │   │   ├── schemas.py             # Pydantic models for API
-│   │   │   └── database.py            # Database models (if needed)
-│   │   ├── services/                  # Business logic
-│   │   │   ├── __init__.py
-│   │   │   ├── rag_service.py         # Main RAG logic
-│   │   │   ├── embedding_service.py   # Hugging Face embeddings
-│   │   │   ├── llm_service.py         # LLM generation
-│   │   │   └── vector_db_service.py   # Vector database operations
-│   │   ├── api/                       # API routes
-│   │   │   ├── __init__.py
-│   │   │   ├── routes/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── chat.py            # Chat endpoints
-│   │   │   │   ├── documents.py       # Document management
-│   │   │   │   └── health.py          # Health check
-│   │   ├── utils/                     # Utility functions
-│   │   │   ├── __init__.py
-│   │   │   ├── logger.py              # Logging setup
-│   │   │   └── helpers.py             # Helper functions
-│   │   └── tests/                     # Backend tests
-│   │       ├── __init__.py
-│   │       └── test_rag.py
-│   ├── requirements.txt               # Python dependencies
-│   └── Dockerfile                     # Docker config (optional)
-│
-├── frontend/                          # React Frontend
-│   ├── public/
-│   ├── src/
-│   │   ├── components/                # React components
-│   │   │   ├── Chat/
-│   │   │   │   ├── ChatInterface.jsx
-│   │   │   │   ├── MessageList.jsx
-│   │   │   │   ├── MessageInput.jsx
-│   │   │   │   └── SourceLinks.jsx    # Display source URLs
-│   │   │   ├── Layout/
-│   │   │   │   ├── Header.jsx
-│   │   │   │   └── Footer.jsx
-│   │   │   └── Common/
-│   │   │       ├── Loading.jsx
-│   │   │       └── ErrorBoundary.jsx
-│   │   ├── services/                  # API services
-│   │   │   ├── api.js                 # API client
-│   │   │   └── chatService.js         # Chat API calls
-│   │   ├── hooks/                     # Custom React hooks
-│   │   │   └── useChat.js
-│   │   ├── utils/                     # Frontend utilities
-│   │   │   └── constants.js
-│   │   ├── App.jsx
-│   │   ├── index.jsx
-│   │   └── index.css
-│   ├── package.json
-│   └── README.md
-│
-├── data/                              # Data processing and storage
-│   ├── crawler/                       # Web scraping scripts
-│   │   ├── __init__.py
-│   │   ├── main.py                    # Main crawler (your existing script)
-│   │   ├── url_config.py              # List of URLs to scrape
+│   │   ├── main.py                  # Crawler implementation
+│   │   ├── url_config.py            # URL configuration
 │   │   └── utils/
-│   │       ├── __init__.py
-│   │       └── text_processor.py      # Text cleaning utilities
-│   ├── raw/                           # Raw scraped data (JSONL files)
-│   │   └── .gitkeep
-│   ├── processed/                     # Processed data ready for embedding
-│   │   └── .gitkeep
-│   └── README.md                      # Data documentation
+│   ├── raw/                         # Raw scraped data (JSONL files)
+│   └── processed/                   # Processed data ready for embedding
 │
-├── scripts/                           # Utility scripts
-│   ├── setup_environment.sh           # Environment setup script
-│   ├── process_data.py                # Process JSONL for embedding
-│   └── upload_to_vector_db.py         # Upload embeddings to cloud DB
-│
-├── docs/                              # Documentation
-│   ├── SETUP.md                       # Setup instructions
-│   ├── API.md                         # API documentation
-│   ├── DEPLOYMENT.md                  # Deployment guide
-│   └── CONTRIBUTING.md                # Contribution guidelines
-│
-└── .github/                           # GitHub workflows (optional)
-    └── workflows/
-        └── ci.yml
+└── venv/                            # Virtual environment (not in git)
 ```
 
 ## 🔑 Key Features
@@ -122,13 +55,92 @@ ksu-it-rag-chatbot/
 
 ## 🚀 Getting Started
 
-See `PROJECT_STRUCTURE.md` for detailed project structure and setup instructions.
+### Prerequisites
 
-## 📝 Current Files
+- Python 3.9 or higher
+- pip package manager
 
-- `main.py` - Web crawler script for scraping KSU IT department websites
-- `PROJECT_STRUCTURE.md` - Detailed project structure guide
+### Installation
+
+1. **Clone the repository** (if not already done)
+
+2. **Create and activate virtual environment**:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Install Playwright browsers**:
+   ```bash
+   playwright install firefox
+   ```
+
+### Running the Application
+
+#### Run the Web Crawler
+
+```bash
+python run_crawler.py
+```
+
+This will crawl KSU IT department websites and save results to `data/raw/kennesaw_uits.jsonl`.
+
+#### Run the FastAPI Backend
+
+```bash
+# Option 1: Direct Python execution
+python main.py
+
+# Option 2: Using uvicorn directly
+uvicorn main:app --reload
+
+# Option 3: Using uvicorn with backend path
+uvicorn backend.app.main:app --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+- API Documentation: `http://localhost:8000/docs`
+- Health Check: `http://localhost:8000/health`
+
+## 📝 Key Files
+
+- `main.py` - FastAPI application entry point
+- `run_crawler.py` - Web crawler runner script
+- `data/crawler/main.py` - Web crawler implementation
+- `data/crawler/url_config.py` - URL configuration for crawling
+- `backend/app/main.py` - FastAPI application setup
+- `backend/app/config.py` - Application configuration
+- `backend/app/models/schemas.py` - API data models
+- `requirements.txt` - Python dependencies
+
+## 🚦 Project Status
+
+**Current Phase**: Foundation Complete, Building Core RAG Pipeline
+
+- ✅ Web crawler functional
+- ✅ Project documentation and planning
+- ✅ Proper code structure and separation of concerns
+- 🚧 RAG pipeline (in progress)
+- 🚧 Backend API (basic structure complete)
+- 🚧 Frontend interface (planned)
+- 📝 Report writing (ready to start)
 
 ## 👥 Team
 
 Enterprise AI - Group 2 - Semester End Project
+
+**Members:**
+- John Ofem
+- Kamran Hall
+- Lhakpa Sherpa
+- Namita Velagapudi
+
+## 📚 Additional Documentation
+
+- `REPORT_TEMPLATE.md` - Template for the project report (4,000-4,800 words)
