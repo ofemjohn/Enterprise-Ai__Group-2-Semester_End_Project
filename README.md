@@ -144,3 +144,6 @@ Enterprise AI - Group 2 - Semester End Project
 ## 📚 Additional Documentation
 
 - `REPORT_TEMPLATE.md` - Template for the project report (4,000-4,800 words)
+
+---
+*Last updated: Repository configured with SSH authentication*
