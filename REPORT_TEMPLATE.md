@@ -91,9 +91,9 @@
        ▼
 ┌─────────────────┐      ┌──────────────┐
 │  RAG Service    │◄────►│ Vector DB    │
-│  - Retrieval    │      │  (ChromaDB)  │
-│  - Generation   │      └──────────────┘
-└─────────────────┘
+│  - Retrieval    │      │  (Pinecone)  │
+│  - Generation   │      │  (Cloud)     │
+└─────────────────┘      └──────────────┘
        │
        ▼
 ┌─────────────────┐
@@ -106,7 +106,9 @@
 1. **Data Collection Layer**
    - Web crawler using Playwright
    - Text extraction with Trafilatura
-   - Domain filtering (campus.kennesaw.edu)
+   - Domain filtering (campus.kennesaw.edu, www.kennesaw.edu, bookstore.kennesaw.edu)
+   - Sequential processing to avoid over-crawling
+   - URL filtering to skip filter/query parameter pages
 
 2. **Data Processing Layer**
    - Text chunking
@@ -147,7 +149,7 @@
 **Backend:**
 - FastAPI (Python web framework)
 - Hugging Face Transformers (embeddings)
-- ChromaDB (vector database)
+- Pinecone (cloud vector database for team collaboration)
 - Playwright (web scraping)
 
 **Frontend:**
@@ -162,9 +164,41 @@
 ### 4.2 Development Process
 
 1. **Phase 1: Data Collection**
-   - Developed web crawler
-   - Extracted content from KSU IT websites
-   - Processed into JSONL format
+   - Developed web crawler using Playwright and Trafilatura
+   - Implemented BFS-based crawling with depth control (max depth 2)
+   - Sequential processing of entry points to ensure data persistence
+   - URL filtering to avoid crawling filter/query parameter combinations
+   - Extracted content from KSU IT websites and processed into JSONL format
+   
+   **Crawling Results:**
+   - **Total pages visited**: 1,671
+   - **Successfully extracted**: 1,423 pages
+   - **Errors**: 200 (mostly PDF downloads and timeouts)
+   - **Output file**: `data/raw/kennesaw_uits.jsonl` (1,423 records)
+   
+   **Data Sources Captured:**
+   - **IT Department Website** (www.kennesaw.edu/ccse/academics/information-technology/): 
+     - Programs (BS in IT, BAS in IT, MS in IT, MS in Cybersecurity)
+     - Course information and descriptions
+     - Admission requirements (undergraduate and graduate)
+     - Student resources and academic advising information
+     - Faculty information and research areas
+     - Department news and updates
+   - **ServiceNow Knowledge Base**: 3 IT support articles
+   - **UITS Main Hub** (campus.kennesaw.edu/offices-services/uits/):
+     - Technology guides (WiFi setup, software downloads, NetID, Duo MFA)
+     - IT services and project request information
+     - Security resources and cybersecurity awareness
+     - AI resources and guidelines
+     - Training and consulting services
+   - **Bookstore Day One Access**: Information about technology access programs
+   - **External Resources**: Turnitin FAQ and other IT-related documentation
+   
+   **Crawling Strategy:**
+   - Depth 0: Single pages/documents (PDFs)
+   - Depth 1: Main page + direct links (self-contained content)
+   - Depth 2: Main page + service pages + detail pages (comprehensive coverage)
+   - Filtered out query parameter URLs (color, size, display filters) to prevent crawling thousands of unnecessary pages
 
 2. **Phase 2: Data Processing**
    - Text chunking strategy
@@ -190,8 +224,8 @@
 ### 4.3 Key Design Decisions
 
 - **RAG over Fine-tuning**: Chosen for source citation and updatability
-- **Vector Database**: ChromaDB for local deployment and cost efficiency
-- **Embedding Model**: Sentence-BERT for semantic search
+- **Vector Database**: Pinecone (cloud-based) for team collaboration and scalability
+- **Embedding Model**: Sentence-BERT (all-MiniLM-L6-v2) for semantic search
 - **Chunking Strategy**: Overlapping chunks for context preservation
 
 ### 4.4 Workflow Diagrams
@@ -429,7 +463,12 @@ Company Name. (Year). *Title of report*. Retrieved from https://example.com
 - UI mockups
 
 ### D. Data Samples
-- Sample crawled data
+- Sample crawled data (1,423 pages from 13 entry points)
+- Data collection statistics:
+  - IT Department pages: ~1,200 pages
+  - UITS service pages: ~83 pages
+  - Knowledge base articles: 3 pages
+  - Other resources: ~137 pages
 - Embedding examples
 - Query-response pairs
 

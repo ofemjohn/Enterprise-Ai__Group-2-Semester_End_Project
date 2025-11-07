@@ -11,8 +11,9 @@ This chatbot helps students in the KSU IT Department (College of Computing and S
 - **Backend**: FastAPI (Python)
 - **Frontend**: React
 - **ML/AI**: Hugging Face Transformers
-- **Vector Database**: Pinecone (Cloud-based)
+- **Vector Database**: Pinecone (Cloud-based for team collaboration)
 - **Web Scraping**: Playwright + Trafilatura
+- **Embeddings**: Sentence Transformers (Hugging Face)
 
 ## 📁 Project Structure
 
@@ -80,6 +81,25 @@ ksu-it-rag-chatbot/
    playwright install firefox
    ```
 
+5. **Set up environment variables**:
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env and add your Pinecone API credentials
+   # Get your Pinecone API key from: https://www.pinecone.io/
+   ```
+   
+   **Required environment variables:**
+   - `PINECONE_API_KEY`: Your Pinecone API key (get from https://www.pinecone.io/)
+   - `PINECONE_ENVIRONMENT`: Your Pinecone environment (e.g., `us-east-1-aws`)
+   - `PINECONE_INDEX_NAME`: Name for your vector index (default: `ksu-it-rag-chatbot`)
+   
+   **Optional environment variables:**
+   - `LLM_PROVIDER`: Choose `huggingface` or `openai` (default: `huggingface`)
+   - `OPENAI_API_KEY`: Required if using OpenAI
+   - `HUGGINGFACE_API_KEY`: Required if using Hugging Face models
+
 ### Running the Application
 
 #### Run the Web Crawler
@@ -121,15 +141,45 @@ The API will be available at `http://localhost:8000`
 
 ## 🚦 Project Status
 
-**Current Phase**: Foundation Complete, Building Core RAG Pipeline
+**Current Phase**: ✅ **FULLY OPERATIONAL** - Ready for Presentation
 
-- ✅ Web crawler functional
-- ✅ Project documentation and planning
-- ✅ Proper code structure and separation of concerns
-- 🚧 RAG pipeline (in progress)
-- 🚧 Backend API (basic structure complete)
-- 🚧 Frontend interface (planned)
-- 📝 Report writing (ready to start)
+### ✅ Completed Components
+
+- ✅ **Data Collection**: 1,423 pages crawled from KSU IT websites
+- ✅ **Data Processing**: 8,592 knowledge chunks created and embedded
+- ✅ **Vector Database**: 8,592 vectors stored in Pinecone (cloud)
+- ✅ **RAG Pipeline**: Complete retrieval + generation system
+- ✅ **LLM Integration**: Mistral-7B-Instruct via Hugging Face
+- ✅ **Backend API**: FastAPI with full documentation
+- ✅ **Source Citations**: Automatic URL and snippet extraction
+- ✅ **Health Monitoring**: Component status checks
+
+### 📊 System Statistics
+
+- **Pages Crawled**: 1,423
+- **Knowledge Chunks**: 8,592
+- **Vectors in Database**: 8,592
+- **Embedding Dimension**: 384
+- **LLM Model**: Mistral-7B-Instruct-v0.2
+- **Response Time**: ~2-5 seconds per query
+
+### 🎯 Current Capabilities
+
+The system can answer questions about:
+- Password resets and account management
+- IT department admission requirements
+- Course information and curriculum
+- Wi-Fi and network setup
+- Service desk contacts
+- Software downloads
+- And more KSU IT topics...
+
+### 🚧 Future Enhancements
+
+- [ ] React frontend interface
+- [ ] Multi-turn conversation support
+- [ ] Query history tracking
+- [ ] User feedback mechanism
 
 ## 👥 Team
 
@@ -144,6 +194,32 @@ Enterprise AI - Group 2 - Semester End Project
 ## 📚 Additional Documentation
 
 - `REPORT_TEMPLATE.md` - Template for the project report (4,000-4,800 words)
+- `PROJECT_STRUCTURE.md` - Detailed project structure and architecture
+- `PRESENTATION_READINESS.md` - Guide for presentation preparation
+- `AGENTS.md` - Pinecone best practices reference
+
+## 🎬 Quick Start for Demo
+
+1. **Start the API server**:
+   ```bash
+   python main.py
+   ```
+
+2. **Access API documentation**:
+   - Swagger UI: http://localhost:8000/docs
+   - ReDoc: http://localhost:8000/redoc
+
+3. **Test a query**:
+   ```bash
+   curl -X POST "http://localhost:8000/api/v1/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"message": "How do I reset my KSU password?"}'
+   ```
+
+4. **Check system health**:
+   ```bash
+   curl http://localhost:8000/api/v1/health/detailed
+   ```
 
 ---
-*Last updated: Repository configured with SSH authentication*
+*Last updated: System fully operational with 8,592 vectors ready for queries*

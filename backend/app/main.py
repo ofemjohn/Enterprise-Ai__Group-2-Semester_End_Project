@@ -1,14 +1,33 @@
 """
-FastAPI Application Entry Point
+FastAPI Application Entry Point - KSU IT RAG Chatbot API
 
-This module contains the main FastAPI application setup, middleware configuration,
-and root-level endpoints for the KSU IT RAG Chatbot API.
+This is the main FastAPI application that serves the RAG chatbot API.
+It provides endpoints for students to query the chatbot and get answers
+about KSU IT department information.
 
-The application structure follows best practices:
-- Centralized configuration via config.py
+Application Features:
+- RESTful API with automatic OpenAPI documentation
+- CORS middleware for frontend integration
+- Global exception handling
+- Health check endpoints
 - Modular route organization
-- CORS middleware for cross-origin requests
-- Health check endpoints for monitoring
+
+API Endpoints:
+- GET / - API information
+- GET /health - Simple health check
+- GET /api/v1/health/detailed - Detailed component status
+- POST /api/v1/chat - Main chat endpoint (RAG queries)
+
+Documentation:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- OpenAPI Schema: http://localhost:8000/openapi.json
+
+The application follows best practices:
+- Centralized configuration via config.py
+- Separation of concerns (routes, services, models)
+- Comprehensive error handling
+- Request/response logging
 """
 
 from fastapi import FastAPI
@@ -16,6 +35,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import settings
+from .utils.logger import logger
 
 # Initialize FastAPI application with metadata
 app = FastAPI(
@@ -40,14 +60,14 @@ app.add_middleware(
 
 # Include API route modules
 from .api.routes import health as health_routes
+from .api.routes import chat as chat_routes
 
 # Register routers
 app.include_router(health_routes.router)
+app.include_router(chat_routes.router)
 
-# TODO: Add more routes as they are implemented
-# from .api.routes import chat, documents
-# app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
-# app.include_router(documents.router, prefix="/api/v1", tags=["documents"])
+# Additional routes can be added here as needed
+# Example: documents, admin, etc.
 
 
 @app.get("/", response_model=dict, tags=["root"])
@@ -67,23 +87,18 @@ async def root() -> dict:
     }
 
 
+# Health check endpoint is now handled by /api/v1/health/detailed
+# Keeping root /health for backward compatibility and simple checks
 @app.get("/health", response_model=dict, tags=["health"])
 async def health_check() -> dict:
     """
-    Health check endpoint for monitoring and load balancers.
+    Simple health check endpoint for quick status verification.
     
-    This endpoint can be used by:
-    - Kubernetes liveness/readiness probes
-    - Load balancers for health checks
-    - Monitoring systems
+    For detailed health checks including component status, use /api/v1/health/detailed
     
     Returns:
-        dict: Health status of the API
+        dict: Basic health status of the API
     """
-    # TODO: Add database connection check
-    # TODO: Add vector database connection check
-    # TODO: Add LLM service health check
-    
     return {
         "status": "healthy",
         "version": settings.api_version,
@@ -106,8 +121,8 @@ async def global_exception_handler(request, exc: Exception) -> JSONResponse:
     Returns:
         JSONResponse: Standardized error response
     """
-    # Log the error (TODO: implement proper logging)
-    print(f"Unhandled exception: {exc}")
+    # Log the error using the configured logger
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
     
     return JSONResponse(
         status_code=500,

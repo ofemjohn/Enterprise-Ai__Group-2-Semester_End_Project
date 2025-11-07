@@ -36,13 +36,22 @@ class Settings:
     cors_allow_methods: List[str] = os.getenv("CORS_ALLOW_METHODS", "*").split(",")
     cors_allow_headers: List[str] = os.getenv("CORS_ALLOW_HEADERS", "*").split(",")
     
-    # Vector Database Configuration (to be added)
-    # vector_db_url: str = os.getenv("VECTOR_DB_URL", "")
-    # vector_db_api_key: str = os.getenv("VECTOR_DB_API_KEY", "")
+    # Vector Database Configuration (Pinecone - Cloud-based)
+    pinecone_api_key: str = os.getenv("PINECONE_API_KEY", "")
+    pinecone_environment: str = os.getenv("PINECONE_ENVIRONMENT", "")
+    pinecone_index_name: str = os.getenv("PINECONE_INDEX_NAME", "ksu-it-rag-chatbot")
+    # Embedding model configuration
+    embedding_model_name: str = os.getenv("EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
+    embedding_dimension: int = int(os.getenv("EMBEDDING_DIMENSION", "384"))  # Default for all-MiniLM-L6-v2
     
-    # LLM Configuration (to be added)
-    # llm_model_name: str = os.getenv("LLM_MODEL_NAME", "")
-    # llm_api_key: str = os.getenv("LLM_API_KEY", "")
+    # LLM Configuration
+    llm_provider: str = os.getenv("LLM_PROVIDER", "huggingface")  # "huggingface" or "openai"
+    llm_model_name: str = os.getenv("LLM_MODEL_NAME", "")
+    # OpenAI configuration (if using OpenAI)
+    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+    # Hugging Face configuration (if using Hugging Face)
+    huggingface_api_key: str = os.getenv("HUGGINGFACE_API_KEY", "")
+    huggingface_model_name: str = os.getenv("HUGGINGFACE_MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
 
 
 # Global settings instance

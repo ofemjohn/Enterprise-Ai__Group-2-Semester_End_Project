@@ -48,6 +48,37 @@ class WebCrawler:
         ))
         return normalized
     
+    @staticmethod
+    def should_skip_url(url: str) -> bool:
+        """
+        Skip URLs that are likely filter/query pages that generate too many variations.
+        This helps avoid crawling thousands of filter combination pages.
+        """
+        parsed = urlparse(url)
+        query = parsed.query.lower()
+        path = parsed.path.lower()
+        
+        # Skip URLs with filter parameters (color, size, display, etc.)
+        filter_params = ['color=', 'size=', 'display=', 'filter=', 'sort=', 'page=']
+        if any(param in query for param in filter_params):
+            # Allow if it's a simple page parameter (like page=1, page=2)
+            if 'page=' in query and len(query.split('&')) == 1:
+                # Allow simple pagination
+                pass
+            else:
+                # Skip complex filter combinations
+                return True
+        
+        # Skip review/comment pages
+        if '/newreview' in path or '/review' in path or '/comment' in path:
+            return True
+        
+        # Skip cart/checkout/account pages for bookstore
+        if any(skip in path for skip in ['/cart', '/checkout', '/account', '/login', '/register']):
+            return True
+        
+        return False
+    
     async def crawl_page(
         self, 
         browser, 
@@ -133,6 +164,10 @@ class WebCrawler:
                     absolute_url = urljoin(normalized_url, href)
                     normalized_link = self.normalize_url(absolute_url)
                     
+                    # Skip URLs that are filter/query pages
+                    if self.should_skip_url(normalized_link):
+                        continue
+                    
                     # Check if it's in allowed domains and not visited
                     if allowed_domains:
                         parsed_link = urlparse(normalized_link)
@@ -163,11 +198,76 @@ class WebCrawler:
             # Rate limiting
             await asyncio.sleep(RATE_LIMIT_DELAY)
     
+    def save_results(self, output_path: Path, append: bool = False):
+        """Save results to JSONL file."""
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        mode = "a" if append else "w"
+        with open(output_path, mode, encoding="utf-8") as f:
+            for r in self.results:
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    
+    async def crawl_entry_point(self, browser, start_url: str, allowed_domains: list, max_depth: int):
+        """
+        Crawl a single entry point completely before moving to the next.
+        Returns the number of pages crawled.
+        """
+        # Track results count before starting
+        results_count_before = len(self.results)
+        
+        # Reset state for this entry point (but keep global visited set)
+        entry_visited = set()
+        entry_queue = deque()
+        
+        normalized_start = self.normalize_url(start_url)
+        entry_queue.append((normalized_start, 0))
+        entry_visited.add(normalized_start)
+        
+        print(f"\n{'='*70}")
+        print(f"Processing entry point: {start_url}")
+        print(f"Max depth: {max_depth}, Allowed domains: {allowed_domains}")
+        print(f"{'='*70}\n", flush=True)
+        
+        # Process this entry point's queue
+        while entry_queue:
+            url, depth = entry_queue.popleft()
+            
+            # Crawl the page (this will add to self.results)
+            try:
+                new_links = await self.crawl_page(browser, url, depth, allowed_domains, max_depth)
+                
+                # Add new links to queue if we haven't exceeded max depth
+                if depth < max_depth:
+                    for link in new_links:
+                        # Skip filter/query URLs
+                        if self.should_skip_url(link):
+                            continue
+                        
+                        if link not in entry_visited and link not in self.visited:
+                            entry_visited.add(link)
+                            entry_queue.append((link, depth + 1))
+                            
+            except Exception as e:
+                print(f"  ✗ Error processing {url}: {e}", flush=True)
+                self.stats["errors"] += 1
+        
+        pages_crawled = len(self.results) - results_count_before
+        print(f"\n  Entry point complete: {pages_crawled} pages crawled", flush=True)
+        return pages_crawled
+    
     async def run(self):
-        """Main crawling function using BFS approach."""
-        print(f"Starting crawl with {len(START_URLS)} entry points", flush=True)
+        """Main crawling function - processes each entry point sequentially."""
+        print(f"Starting sequential crawl with {len(START_URLS)} entry points", flush=True)
         print(f"Global max depth: {MAX_DEPTH}", flush=True)
-        print(f"Rate limit: {RATE_LIMIT_DELAY}s between requests\n", flush=True)
+        print(f"Rate limit: {RATE_LIMIT_DELAY}s between requests", flush=True)
+        print(f"Results will be saved after each entry point\n", flush=True)
+        
+        output_path = Path(OUTPUT_FILE)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Clear output file if it exists (start fresh)
+        if output_path.exists():
+            output_path.unlink()
         
         print("Initializing Playwright...", flush=True)
         
@@ -177,56 +277,53 @@ class WebCrawler:
             print("Browser launched successfully!\n", flush=True)
             
             try:
-                # Initialize queue with all starting URLs
-                for start_url, allowed_domains, max_depth in START_URLS:
-                    normalized_start = self.normalize_url(start_url)
-                    self.queue.append((normalized_start, 0))
-                    self.url_domains[normalized_start] = allowed_domains
-                    self.url_max_depth[normalized_start] = max_depth
-                    print(f"  [{len(self.queue)}] Entry point: {normalized_start[:60]}... (depth: {max_depth})", flush=True)
-                print(f"\n{'='*70}")
-                print(f"Starting crawl with {len(self.queue)} URLs in queue...")
-                print(f"{'='*70}\n", flush=True)
-                
-                # Process queue
-                while self.queue:
-                    url, depth = self.queue.popleft()
+                # Process each entry point sequentially
+                for idx, (start_url, allowed_domains, max_depth) in enumerate(START_URLS, 1):
+                    print(f"\n{'#'*70}")
+                    print(f"Entry Point {idx}/{len(START_URLS)}")
+                    print(f"{'#'*70}", flush=True)
                     
-                    # Get allowed domains and max depth for this URL
-                    allowed_domains = self.url_domains.get(url, None)
-                    max_depth_for_branch = self.url_max_depth.get(url, MAX_DEPTH)
-                    
-                    # Crawl the page and get new links
-                    new_links = await self.crawl_page(browser, url, depth, allowed_domains, max_depth_for_branch)
-                    
-                    # Add new links to queue if we haven't exceeded max depth
-                    if depth < max_depth_for_branch:
-                        for link in new_links:
-                            if link not in self.visited:
-                                self.queue.append((link, depth + 1))
-                                # Inherit domains and max depth from parent
-                                self.url_domains[link] = allowed_domains
-                                self.url_max_depth[link] = max_depth_for_branch
+                    try:
+                        # Crawl this entry point
+                        pages_crawled = await self.crawl_entry_point(browser, start_url, allowed_domains, max_depth)
+                        
+                        # Save results after each entry point
+                        self.save_results(output_path, append=(idx > 1))
+                        print(f"  ✓ Saved {len(self.results)} total pages so far to {output_path}", flush=True)
+                        
+                        # Clear results list to avoid memory issues (already saved)
+                        # Keep visited set to avoid re-crawling across entry points
+                        self.results = []
+                        
+                    except KeyboardInterrupt:
+                        print("\n\nCrawling interrupted by user")
+                        # Save what we have so far
+                        if self.results:
+                            self.save_results(output_path, append=True)
+                        raise
+                    except Exception as e:
+                        print(f"\n  ✗ Error processing entry point {idx}: {e}", flush=True)
+                        print(f"  Continuing with next entry point...\n", flush=True)
+                        # Continue with next entry point
+                        continue
                 
                 await browser.close()
                 
             except KeyboardInterrupt:
                 print("\n\nCrawling interrupted by user")
+                # Save what we have so far
+                if self.results:
+                    self.save_results(output_path, append=True)
                 await browser.close()
             except Exception as e:
                 print(f"\n\nFatal error: {e}")
+                # Save what we have so far
+                if self.results:
+                    self.save_results(output_path, append=True)
                 await browser.close()
                 raise
         
-        # Save results
-        output_path = Path(OUTPUT_FILE)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        with open(output_path, "w", encoding="utf-8") as f:
-            for r in self.results:
-                f.write(json.dumps(r, ensure_ascii=False) + "\n")
-        
-        # Print summary
+        # Final summary
         print("\n" + "="*60)
         print("CRAWLING SUMMARY")
         print("="*60)
@@ -235,7 +332,13 @@ class WebCrawler:
         print(f"Errors: {self.stats['errors']}")
         print(f"Skipped: {self.stats['skipped']}")
         print(f"Results saved to: {output_path}")
-        print(f"Total text extracted: {sum(len(r['text']) for r in self.results):,} characters")
+        
+        # Read back results for final count
+        if output_path.exists():
+            with open(output_path, "r", encoding="utf-8") as f:
+                total_lines = sum(1 for _ in f)
+            print(f"Total records in file: {total_lines}")
+        
         print("="*60)
 
 
