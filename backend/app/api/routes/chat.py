@@ -9,10 +9,17 @@ Key Features:
 - Retrieves relevant context from vector database
 - Generates answers using LLM with retrieved context
 - Returns answers with source URLs for transparency
+
+TRANSPARENCY MECHANISM:
+- All responses are generated SOLELY by the LLM (no fallback content)
+- If the LLM fails or is unavailable, a clear "unavailable" message is returned
+- This ensures users always know when they're receiving AI-generated content
+- No misleading fallback responses that could be mistaken for AI-generated answers
 """
 
 from fastapi import APIRouter, HTTPException
 from typing import Dict
+import uuid
 
 from ...models.schemas import ChatMessage, ChatResponse, Source, ErrorResponse
 from ...services.rag_service import get_rag_service
@@ -65,10 +72,17 @@ async def chat(message: ChatMessage) -> ChatResponse:
         # Get RAG service
         rag_service = get_rag_service()
         
-        # Process query through RAG pipeline
-        result = rag_service.query(message.message, top_k=5)
+        # Generate conversation_id if not provided (for new conversations)
+        conversation_id = message.conversation_id
+        if not conversation_id:
+            # Generate a simple ID based on timestamp (frontend should handle this better)
+            import uuid
+            conversation_id = str(uuid.uuid4())[:8]
         
-        # Format sources
+        # Process query through RAG pipeline with conversation context
+        result = rag_service.query(message.message, top_k=5, conversation_id=conversation_id)
+        
+        # Format sources (exclude score from response, it's internal)
         sources = [
             Source(
                 url=source.get("url", ""),
@@ -76,19 +90,31 @@ async def chat(message: ChatMessage) -> ChatResponse:
                 snippet=source.get("snippet")
             )
             for source in result.get("sources", [])
+            # Sources are already filtered by relevance in RAG service
         ]
         
-        # Build response
+        # Build response (use generated conversation_id if it was created)
         response = ChatResponse(
             answer=result.get("answer", ""),
             sources=sources,
-            conversation_id=message.conversation_id
+            conversation_id=conversation_id
         )
         
         logger.info(f"Processed chat query: {message.message[:50]}...")
         return response
         
+    except RuntimeError as e:
+        # LLM service unavailable or failed
+        # TRANSPARENCY: Return clear "unavailable" message instead of fallback content
+        # This ensures users know the AI service is down, not receiving misleading responses
+        logger.error(f"LLM service unavailable: {e}")
+        return ChatResponse(
+            answer="I'm sorry, but the AI service is currently unavailable. Please try again in a few moments. If the problem persists, please contact the IT support team.",
+            sources=[],
+            conversation_id=message.conversation_id
+        )
     except Exception as e:
+        # Other errors (e.g., vector DB issues, network problems)
         logger.error(f"Error processing chat query: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,

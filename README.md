@@ -128,6 +128,23 @@ The API will be available at `http://localhost:8000`
 - API Documentation: `http://localhost:8000/docs`
 - Health Check: `http://localhost:8000/health`
 
+#### Run the React Frontend
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies (first time only)
+npm install
+
+# Start development server
+npm start
+```
+
+The frontend will be available at `http://localhost:3000`
+
+**Note**: Make sure the backend API is running on port 8000 for the frontend to work.
+
 ## 📝 Key Files
 
 - `main.py` - FastAPI application entry point

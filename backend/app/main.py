@@ -48,10 +48,18 @@ app = FastAPI(
 )
 
 # CORS Middleware Configuration
-# Allows cross-origin requests from frontend applications
+# Allows cross-origin requests from frontend applications (React dev server on port 3000)
+# Combine default React dev server origins with configured origins
+cors_origins = [
+    "http://localhost:3000",  # React development server
+    "http://127.0.0.1:3000",
+]
+# Add configured origins (filter out "*" if present)
+cors_origins.extend([origin for origin in settings.cors_origins if origin != "*"])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=cors_origins if cors_origins else ["*"],  # Fallback to all if empty
     allow_credentials=settings.cors_allow_credentials,
     allow_methods=settings.cors_allow_methods,
     allow_headers=settings.cors_allow_headers,

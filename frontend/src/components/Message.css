@@ -1,0 +1,230 @@
+.message {
+  display: flex;
+  gap: var(--spacing-md);
+  animation: fadeIn var(--transition-base);
+  max-width: 85%;
+}
+
+.message-user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.message-bot {
+  align-self: flex-start;
+}
+
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.message-user .message-avatar {
+  background: var(--user-message-bg);
+  color: var(--user-message-text);
+}
+
+.message-bot .message-avatar {
+  background: var(--ksu-blue);
+  color: white;
+}
+
+.message-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.message-content {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  word-wrap: break-word;
+  line-height: 1.6;
+}
+
+.message-user .message-content {
+  background: var(--user-message-bg);
+  color: var(--user-message-text);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.message-bot .message-content {
+  background: var(--bot-message-bg);
+  color: var(--bot-message-text);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.message-error .message-content {
+  background: #fee;
+  color: var(--error);
+  border: 1px solid #fcc;
+}
+
+.message-content p {
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content {
+  font-size: 0.9375rem;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 600;
+}
+
+.markdown-content h1 {
+  font-size: 1.5rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.25rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.125rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-xl);
+}
+
+.markdown-content li {
+  margin: var(--spacing-xs) 0;
+}
+
+.markdown-content code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875em;
+  font-family: 'Courier New', monospace;
+}
+
+.markdown-content pre {
+  background: rgba(0, 0, 0, 0.05);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  margin: var(--spacing-md) 0;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-content a {
+  color: var(--ksu-blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-base);
+}
+
+.markdown-content a:hover {
+  border-bottom-color: var(--ksu-blue);
+}
+
+.message-sources {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--source-bg);
+  border: 1px solid var(--source-border);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+}
+
+.sources-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.sources-title {
+  font-weight: 600;
+  color: var(--ksu-blue);
+}
+
+.copy-button {
+  background: transparent;
+  border: none;
+  color: var(--ksu-blue);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-base);
+}
+
+.copy-button:hover {
+  background: rgba(0, 48, 87, 0.1);
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.source-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--ksu-blue);
+  text-decoration: none;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-base);
+  word-break: break-all;
+}
+
+.source-link:hover {
+  background: rgba(0, 48, 87, 0.1);
+}
+
+.source-url {
+  font-size: 0.8125rem;
+}
+
+.message-timestamp {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0 var(--spacing-sm);
+}
+
+@media (max-width: 768px) {
+  .message {
+    max-width: 95%;
+  }
+  
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .message-content {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.875rem;
+  }
+}
+
